@@ -1,0 +1,121 @@
+{
+    "stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ],
+                "gtf": [
+                    
+                ],
+                "txt": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.7"
+        },
+        "timestamp": "2025-10-06T09:30:40.82970252"
+    },
+    "tagdir": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,3830a3d6c88718aac8794867ece68999"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ],
+                "gtf": [
+                    
+                ],
+                "txt": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,3830a3d6c88718aac8794867ece68999"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.7"
+        },
+        "timestamp": "2025-10-06T09:37:11.880037812"
+    },
+    "sarscov2 - tagdir - uniqmap": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,49bc9b650b2acd03adb0f201493a6863"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ],
+                "gtf": [
+                    
+                ],
+                "txt": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test_peaks.txt:md5,49bc9b650b2acd03adb0f201493a6863"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,12c3e88a3eeb96208a1d352504ebebfa"
+                ]
+            },
+            "# uniqMapDirectory = uniqmap.GRCh38_chr21.50nt",
+            "# cmd = findPeaks test_tagdir -style factor -style factor -o test_peaks.txt -uniqmap uniqmap.GRCh38_chr21.50nt"
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.7"
+        },
+        "timestamp": "2025-10-06T09:37:21.668112406"
+    }
+}

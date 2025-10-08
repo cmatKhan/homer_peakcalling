@@ -5,6 +5,10 @@
 */
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { SAMTOOLS_VIEW } from '../modules/nf-core/samtools/view/main'    
+include { BEDTOOLS_INTERSECT     } from '../modules/nf-core/bedtools/intersect/main'   
+include { BEDTOOLS_INTERSECT as BEDTOOLS_INTERSECT_CNTRL    } from '../modules/nf-core/bedtools/intersect/main'   
+include { HOMER_PEAKCALLING      } from '../subworkflows/local/homer_peakcalling/main'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_homer_peakcalling_from_bam_pipeline'
@@ -18,12 +22,75 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_home
 workflow HOMER_PEAKCALLING_FROM_BAM {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+    ch_bam
+    ch_fasta
+    ch_gtf
+    ch_control_bam
+    ch_blacklist
+
     main:
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+    ch_peakcalling_bams = Channel.empty()
 
+    SAMTOOLS_VIEW(
+        ch_bam.map { meta, bam -> [meta, bam, []] },
+        ch_fasta.map { fasta -> [[:], fasta] },
+        [],  // qname
+        "bai"
+    )
+    ch_peakcalling_bams = SAMTOOLS_VIEW.out.bam
+    ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions.first())
+
+    // the control for chipexo doesn't need to be passed through b/c it is
+    // already filtered
+
+
+    if (ch_blacklist) {
+        BEDTOOLS_INTERSECT(
+            ch_peakcalling_bams.combine(ch_blacklist).map { meta, bam, bed -> [meta, bam, bed] },
+            [[:],[]]  // BEDTOOLS_INTERSECT doesn't need fasta/chrom_sizes
+        )
+        ch_peakcalling_bams = BEDTOOLS_INTERSECT.out.intersect
+        ch_versions = ch_versions.mix(BEDTOOLS_INTERSECT.out.versions.first())
+
+        if (ch_control_bam) {
+            BEDTOOLS_INTERSECT_CNTRL(
+                ch_control_bam.combine(ch_blacklist).map { meta, bam, bed -> [meta, bam, bed] },
+                [[:],[]]  // BEDTOOLS_INTERSECT doesn't need fasta/chrom_sizes
+            )
+            ch_control_bam = BEDTOOLS_INTERSECT_CNTRL.out.intersect
+        }
+    }
+
+
+    HOMER_PEAKCALLING (
+        Channel.value("factor"),
+        ch_peakcalling_bams,
+        [], // tagdir
+        ch_fasta,
+        ch_gtf,
+        ch_control_bam,
+        [], // control_tagdir
+        [], // uniqmap
+        params.merge_peaks,
+        params.annotate_individual,
+        params.quantify_peaks,
+        params.make_bedgraph
+    )
+
+    // ch_promoter_enrichment = (tagdir ?: HOMER_PEAKCALLING.out.tagdir)
+    // .mix(control_tagdir ?: HOMER_PEAKCALLING.out.control_tagdir)
+    // HOMER_ANNOTATEPEAKS (
+    //     ch_promoter_enrichment,
+    //     ch_gtf
+    // )
+    // todo: there should be a report output channel from homer_peakcalling
+    ch_versions = ch_versions.mix(HOMER_PEAKCALLING.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(HOMER_PEAKCALLING.out.tagdir.map(it -> it[1]))
+    ch_multiqc_files = ch_multiqc_files.mix(HOMER_PEAKCALLING.out.txt.map(it -> it[1]))
+    ch_multiqc_files = ch_multiqc_files.mix(HOMER_PEAKCALLING.out.merged_txt.map(it -> it[1]))
     //
     // Collate and save software versions
     //

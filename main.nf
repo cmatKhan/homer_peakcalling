@@ -32,11 +32,20 @@ workflow CMATKHAN_HOMER_PEAKCALLING_FROM_BAM {
 
     main:
 
+    ch_fasta = Channel.fromPath(params.fasta).first()
+    ch_gtf = params.gtf ? Channel.fromPath(params.gtf).first() : []
+    ch_control_bam = params.control_bam ? Channel.of([[id: "control"], file(params.control_bam)]) : []
+    ch_blacklist = params.blacklist_bed ? Channel.fromPath(params.blacklist_bed) : [].first()
+
     //
     // WORKFLOW: Run pipeline
     //
     HOMER_PEAKCALLING_FROM_BAM (
-        samplesheet
+        samplesheet,
+        ch_fasta,
+        ch_gtf,
+        ch_control_bam,
+        ch_blacklist
     )
     emit:
     multiqc_report = HOMER_PEAKCALLING_FROM_BAM.out.multiqc_report // channel: /path/to/multiqc_report.html
