@@ -27,6 +27,7 @@ workflow HOMER_PEAKCALLING_FROM_BAM {
     ch_gtf
     ch_control_bam
     ch_blacklist
+    ch_tss
 
     main:
 
@@ -77,7 +78,8 @@ workflow HOMER_PEAKCALLING_FROM_BAM {
         params.merge_peaks,
         params.annotate_individual,
         params.quantify_peaks,
-        params.make_bedgraph
+        params.make_bedgraph,
+        ch_tss
     )
 
     // ch_promoter_enrichment = (tagdir ?: HOMER_PEAKCALLING.out.tagdir)

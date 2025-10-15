@@ -8,16 +8,17 @@ process HOMER_ANNOTATEPEAKS_ALT {
         : 'community.wave.seqera.io/library/bioconductor-deseq2_bioconductor-edger_homer_samtools_pruned:08c7bb832e96c6bd'}"
 
     input:
-    tuple val(meta), path(peak)
-    val genome                  // genome version or path to fasta
-    path gtf                    // For custom annotations
-    path tagdirs                // Can be list of tag directories for -d option
-    path motifs                 // Can be list of motif files for -m option
-    path gene_data              // For -gene option
-    path vcf                    // For -vcf option
-    path bedgraph               // Can be list of bedGraph files
-    path wiggle                 // Can be list of wiggle files
-    path other_peaks            // Can be list of peak files for -p option
+    tuple val(meta), val(peak_or_mode)  // Can be path(peak) OR string "tss"/"tts"/"rna"
+    val genome                           // genome version, path to fasta, or "none"
+    path gtf                             // For custom annotations
+    path tagdirs                         // Can be list of tag directories for -d option
+    path motifs                          // Can be list of motif files for -m option
+    path gene_data                       // For -gene option
+    path vcf                             // For -vcf option
+    path bedgraph                        // Can be list of bedGraph files
+    path wiggle                          // Can be list of wiggle files
+    path other_peaks                     // Can be list of peak files for -p option
+    path ctss                            // For -cTSS option (custom TSS file)
 
     output:
     tuple val(meta), path("*.txt")              , emit: txt
@@ -37,6 +38,9 @@ process HOMER_ANNOTATEPEAKS_ALT {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '5.1'
     
+    // Handle peak input - can be file or mode string (tss/tts/rna)
+    def peak_input = peak_or_mode instanceof String ? peak_or_mode : peak_or_mode
+    
     // Determine output filename based on args
     def output_name = prefix
     if (args.contains('-hist') && args.contains('-ghist')) {
@@ -46,7 +50,7 @@ process HOMER_ANNOTATEPEAKS_ALT {
     } else if (args.contains('-center')) {
         output_name = "${prefix}.centered.peaks"
     } else if (args.contains('-size')) {
-        output_name = "${prefix}.count.peaks"
+        output_name = "${prefix}.count"
     } else {
         output_name = "${prefix}.annotated"
     }
@@ -60,26 +64,21 @@ process HOMER_ANNOTATEPEAKS_ALT {
     def bedgraph_cmd = bedgraph ? "-bedGraph ${bedgraph.join(' ')}" : ''
     def wiggle_cmd = wiggle ? "-wig ${wiggle.join(' ')}" : ''
     def peak_cmd = other_peaks ? "-p ${other_peaks.join(' ')}" : ''
+    def ctss_cmd = ctss ? "-cTSS ${ctss}" : ''
     
     // Handle -matrix option specially if present in args
-    def matrix_prefix = ""
     if (args.contains('-matrix')) {
-        matrix_prefix = "${prefix}.motif_matrix"
-        args = args.replaceAll(/-matrix\s+\S+/, "-matrix ${matrix_prefix}")
+        args = args.replaceAll(/-matrix\s+\S+/, "-matrix ${prefix}.motif_matrix")
     }
     
     // Handle -mbed option
-    def mbed_file = ""
     if (args.contains('-mbed')) {
-        mbed_file = "${prefix}.motif.bed"
-        args = args.replaceAll(/-mbed\s+\S+/, "-mbed ${mbed_file}")
+        args = args.replaceAll(/-mbed\s+\S+/, "-mbed ${prefix}.motif.bed")
     }
     
     // Handle -mfasta option
-    def mfasta_file = ""
     if (args.contains('-mfasta')) {
-        mfasta_file = "${prefix}.motif.fa"
-        args = args.replaceAll(/-mfasta\s+\S+/, "-mfasta ${mfasta_file}")
+        args = args.replaceAll(/-mfasta\s+\S+/, "-mfasta ${prefix}.motif.fa")
     }
     
     // Handle -go option
@@ -94,8 +93,9 @@ process HOMER_ANNOTATEPEAKS_ALT {
     
     """
     annotatePeaks.pl \\
-        ${peak} \\
+        ${peak_input} \\
         ${genome} \\
+        ${ctss_cmd} \\
         ${gtf_cmd} \\
         ${tagdir_cmd} \\
         ${motif_cmd} \\

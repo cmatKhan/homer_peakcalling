@@ -9,6 +9,7 @@ include { HOMER_MERGEPEAKS                                          } from '../.
 include { HOMER_ANNOTATEPEAKS as HOMER_ANNOTATEPEAKS_INDIVIDUAL     } from '../../../modules/local/homer/annotatepeaks/main'
 include { HOMER_ANNOTATEPEAKS as HOMER_ANNOTATEPEAKS_MERGED         } from '../../../modules/local/homer/annotatepeaks/main'
 include { HOMER_ANNOTATEPEAKS_ALT as HOMER_QUANTIFYPEAKS            } from '../../../modules/local/homer/annotatepeaks_alt/main'
+include { HOMER_ANNOTATEPEAKS_ALT as HOMER_QUANTIFYTSS              } from '../../../modules/local/homer/annotatepeaks_alt/main'
 include { HOMER_POS2BED                                             } from '../../../modules/local/homer/pos2bed/main'
 include { UNZIP                                                     } from '../../../modules/nf-core/unzip/main'
 
@@ -26,6 +27,7 @@ workflow HOMER_PEAKCALLING {
     annotate_individual      // val: boolean - whether to annotate individual peak files
     quantify_peaks           // val: boolean - whether to quantify reads in merged peaks (creates count matrix)
     make_bedgraph            // val: boolean - whether to create bedGraph files for UCSC visualization
+    ch_tss                   // channel: path(tss) or []
 
     main:
     ch_versions = Channel.empty()
@@ -165,15 +167,30 @@ workflow HOMER_PEAKCALLING {
                 fasta,
                 gtf,
                 ch_quantify_input.map { _meta, _peaks, tagdirs -> tagdirs }.collect(),
-                [],
-                [],
-                [],
-                [],
-                [],
-                []
+                [], // motifs
+                [], // gene_data
+                [], // vcf
+                [], // bedgraph
+                [], // wiggle
+                [], // other_peaks
+                [], // ctss
             )
             ch_count_matrix = HOMER_QUANTIFYPEAKS.out.txt
             ch_versions = ch_versions.mix(HOMER_QUANTIFYPEAKS.out.versions.first())
+
+            HOMER_QUANTIFYTSS(
+                Channel.value([[id: 'promoter_enrichment'], 'tss']),  // Use "tss" mode
+                'none',
+                [],
+                ch_quantify_input.map { _meta, _peaks, tagdirs -> tagdirs }.collect(),
+                [], // motifs
+                [], // gene_data
+                [], // vcf
+                [], // bedgraph
+                [], // wiggle
+                [], // other_peaks
+                ch_tss, // ctss
+            )
         }
     }
 
