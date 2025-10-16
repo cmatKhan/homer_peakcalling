@@ -35,9 +35,8 @@ workflow CMATKHAN_HOMER_PEAKCALLING_FROM_BAM {
     ch_fasta = Channel.fromPath(params.fasta).first()
     ch_gtf = params.gtf ? Channel.fromPath(params.gtf).first() : []
     ch_control_bam = params.control_bam ? Channel.of([[id: "control"], file(params.control_bam)]) : []
-    ch_blacklist = params.blacklist_bed ? Channel.fromPath(params.blacklist_bed) : [].first()
-    ch_tss = params.tss_pos ? Channel.fromPath(params.tss_pos) : [].first()
-
+    ch_blacklist = params.blacklist_bed ? Channel.fromPath(params.blacklist_bed).first() : []
+    ch_tss = params.tss_pos ? Channel.fromPath(params.tss_pos).first() : []
     //
     // WORKFLOW: Run pipeline
     //
