@@ -20,14 +20,15 @@ process HOMER_MERGEPEAKS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def peak_list = peaks instanceof List ? peaks : [peaks]
-    def use_peak_file = peak_list.size() > 5
+    def use_peak_file = peak_list.size() > 1
     def VERSION = '5.1'
     
     if (use_peak_file) {
-        // Create file list using printf
-        def peak_names = peak_list.collect { it.name }.join('\\n')
         """
-        printf "${peak_names}\\n" > ${prefix}_peak_files.txt
+        # Create file list using a shell loop
+        for peak_file in ${peaks.join(' ')}; do
+            echo "\${peak_file}" >> ${prefix}_peak_files.txt
+        done
 
         mergePeaks \\
             $args \\
@@ -40,7 +41,6 @@ process HOMER_MERGEPEAKS {
         END_VERSIONS
         """
     } else {
-        // Use peaks directly
         """
         mergePeaks \\
             $args \\
