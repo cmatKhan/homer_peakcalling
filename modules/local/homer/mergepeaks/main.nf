@@ -19,40 +19,19 @@ process HOMER_MERGEPEAKS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def peak_list = peaks instanceof List ? peaks : [peaks]
-    def use_peak_file = peak_list.size() > 10
     def VERSION = '5.1'
     
-    if (use_peak_file) {
-        """
-        # Create file list using a shell loop
-        for peak_file in ${peaks.join(' ')}; do
-            echo "\${peak_file}" >> ${prefix}_peak_files.txt
-        done
+    """
+    mergePeaks \\
+        $args \\
+        ${peaks.join(' ')} \\
+        > ${prefix}_merged.txt
 
-        mergePeaks \\
-            $args \\
-            -file ${prefix}_peak_files.txt \\
-            > ${prefix}_merged.txt
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            homer: ${VERSION}
-        END_VERSIONS
-        """
-    } else {
-        """
-        mergePeaks \\
-            $args \\
-            ${peaks.join(' ')} \\
-            > ${prefix}_merged.txt
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            homer: ${VERSION}
-        END_VERSIONS
-        """
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        homer: ${VERSION}
+    END_VERSIONS
+    """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
