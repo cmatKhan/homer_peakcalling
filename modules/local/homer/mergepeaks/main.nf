@@ -19,12 +19,16 @@ process HOMER_MERGEPEAKS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def peak_list = peaks instanceof List ? peaks : [peaks]
+    def peak_str = peak_list.collect { it.fileName.name }.join('\\n')
     def VERSION = '5.1'
     
     """
+    printf '$peak_str' > ${prefix}_peak_files.txt
+
     mergePeaks \\
         $args \\
-        ${peaks.join(' ')} \\
+        -file ${prefix}_peak_files.txt \\
         > ${prefix}_merged.txt
 
     cat <<-END_VERSIONS > versions.yml
